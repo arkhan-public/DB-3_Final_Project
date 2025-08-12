@@ -1,7 +1,16 @@
 Use master
 GO
 
-CREATE DATABASE PurbachalWasteManagement;
+--CREATE DATABASE PurbachalWasteManagement;
+--GO
+
+CREATE DATABASE [PurbachalWasteManagement]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'PurbachalWasteManagement', FILENAME = N'C:\Ostad_DB\PurbachalWasteManagement.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'PurbachalWasteManagement_log', FILENAME = N'C:\Ostad_DB\PurbachalWasteManagement_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
 GO
 
 USE PurbachalWasteManagement;
@@ -10,7 +19,9 @@ GO
 -- =========================================================================================================================
 -- ================================================= TABLE CREATION ========================================================
 -- =========================================================================================================================
+--------------------
 -- 1. Tenants Table:
+--------------------
 CREATE TABLE Tenants (
     TenantId		INT					PRIMARY KEY IDENTITY(1,1),
     TenantName		NVARCHAR(255)		NOT NULL		UNIQUE,
@@ -21,8 +32,9 @@ CREATE TABLE Tenants (
     Email			NVARCHAR(255)
 );
 
--- 2. Sites Table:
--- A tenant can have multiple sites.
+----------------------------------------------------
+-- 2. Sites Table: A tenant can have multiple sites.
+----------------------------------------------------
 CREATE TABLE Sites (
     SiteId			INT					PRIMARY KEY IDENTITY(1,1),
     TenantId		INT					NOT NULL,
@@ -36,8 +48,9 @@ CREATE TABLE Sites (
     CONSTRAINT FK_Sites_Tenants FOREIGN KEY (TenantId) REFERENCES Tenants(TenantId)
 );
 
--- 3. Weighbridges Table:
--- A site can have multiple weighbridges.
+----------------------------------------------------------------
+-- 3. Weighbridges Table: A site can have multiple weighbridges.
+----------------------------------------------------------------
 CREATE TABLE Weighbridges (
     WeighbridgeId			INT					PRIMARY KEY IDENTITY(1,1),
     SiteId					INT					NOT NULL,
@@ -48,7 +61,9 @@ CREATE TABLE Weighbridges (
     CONSTRAINT FK_Weighbridges_Sites FOREIGN KEY (SiteId) REFERENCES Sites(SiteId)
 );
 
+---------------------
 -- 4. Vehicles Table:
+---------------------
 CREATE TABLE Vehicles (
     VehicleId				INT					PRIMARY KEY IDENTITY(1,1),
     TenantId				INT					NOT NULL,	
@@ -61,7 +76,9 @@ CREATE TABLE Vehicles (
     CONSTRAINT FK_Vehicles_Tenants FOREIGN KEY (TenantId) REFERENCES Tenants(TenantId)
 );
 
+--------------------
 -- 5. Drivers Table:
+--------------------
 CREATE TABLE Drivers (
     DriverId		INT				PRIMARY KEY IDENTITY(1,1),
     TenantId		INT				NOT NULL,
@@ -75,7 +92,9 @@ CREATE TABLE Drivers (
     CONSTRAINT FK_Drivers_Tenants FOREIGN KEY (TenantId) REFERENCES Tenants(TenantId)
 );
 
+----------------------
 -- 6. Customers Table:
+----------------------
 CREATE TABLE Customers (
     CustomerId		INT				PRIMARY KEY IDENTITY(1,1),
     TenantId		INT				NOT NULL,
@@ -89,7 +108,9 @@ CREATE TABLE Customers (
     CONSTRAINT FK_Customers_Tenants FOREIGN KEY (TenantId) REFERENCES Tenants(TenantId)
 );
 
+---------------------
 -- 7. Products Table:
+---------------------
 CREATE TABLE Products (
     ProductId				INT					PRIMARY KEY IDENTITY(1,1),
     TenantId				INT					NOT NULL,
@@ -100,7 +121,9 @@ CREATE TABLE Products (
     CONSTRAINT UQ_Products_TenantId_ProductCode UNIQUE (TenantId, ProductCode)
 );
 
+-----------------
 -- 8. Jobs Table:
+-----------------
 CREATE TABLE Jobs (
     JobId					INT					PRIMARY KEY IDENTITY(1,1),
     TenantId				INT					NOT NULL,
@@ -120,7 +143,9 @@ CREATE TABLE Jobs (
 );
 GO
 
--- 9. Transactions Table
+--------------------------------------------
+-- 9. Transactions Table: Table for Billing.
+--------------------------------------------
 CREATE TABLE Transactions (
     TransactionId			INT				PRIMARY KEY IDENTITY(1,1),
     JobId					INT				NULL,
@@ -162,14 +187,18 @@ CREATE TABLE Transactions (
 );
 GO
 
--- 10. Roles Table
+-------------------
+-- 10. Roles Table:
+-------------------
 CREATE TABLE Roles (
     RoleId			INT IDENTITY(1,1)		PRIMARY KEY,
     RoleName		NVARCHAR(50)			NOT NULL UNIQUE
 );
 GO
 
--- 11. Users Table
+-------------------
+-- 11. Users Table:
+-------------------
 CREATE TABLE Users (
     UserId						INT IDENTITY(1,1) PRIMARY KEY,
     TenantId					INT								NULL,
@@ -182,7 +211,9 @@ CREATE TABLE Users (
 );
 GO
 
--- 12. UserRoles Table
+-----------------------
+-- 12. UserRoles Table:
+-----------------------
 CREATE TABLE UserRoles (
     UserId			INT			NOT NULL,
     RoleId			INT			NOT NULL,
@@ -195,10 +226,9 @@ GO
 -- =========================================================================================================================
 -- =============================================== STORED PROCEDURE ========================================================
 -- =========================================================================================================================
-
--- -------------------------------------------------
--- Tenants
--- -------------------------------------------------
+-------------------------------
+-- 1. Tenants Stored Procedure:
+-------------------------------
 CREATE PROCEDURE sp_InsertTenant
     @TenantName NVARCHAR(255), @Street NVARCHAR(255), @City NVARCHAR(255), @PostalCode NVARCHAR(20), @Phone NVARCHAR(50), @Email NVARCHAR(255)
 AS
@@ -255,9 +285,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Sites
--- -------------------------------------------------
+-----------------------------
+-- 2. Sites Stored Procedure:
+-----------------------------
 CREATE PROCEDURE sp_InsertSite
     @TenantId INT, @SiteName NVARCHAR(255), @SitePrefix NVARCHAR(10), @Street NVARCHAR(255), @City NVARCHAR(255), @PostalCode NVARCHAR(20), @Phone NVARCHAR(50), @Email NVARCHAR(255)
 AS
@@ -301,9 +331,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Weighbridges
--- -------------------------------------------------
+-- ----------------------------------
+-- 03. Weighbridges Stored Procedure:
+-- ----------------------------------
 CREATE PROCEDURE sp_InsertWeighbridge
     @SiteId INT, @WeighbridgeName NVARCHAR(255), @WeighbridgePrefix NVARCHAR(10), @Location NVARCHAR(255), @TotalDeck INT
 AS
@@ -334,9 +364,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Vehicles
--- -------------------------------------------------
+-- -----------------------------
+-- 4. Vehicles Stored Procedure:
+-- -----------------------------
 CREATE PROCEDURE sp_InsertVehicle
     @TenantId INT, @RegistrationNumber NVARCHAR(50), @FleetNo NVARCHAR(50), @Tare DECIMAL(18, 2), @SteerAxleMaxLoad DECIMAL(18, 2), @SecondAxleMaxLoad DECIMAL(18, 2), @ThirdAxleMaxLoad DECIMAL(18, 2)
 AS
@@ -373,9 +403,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Drivers
--- -------------------------------------------------
+-- ----------------------------
+-- 5. Drivers Stored Procedure:
+-- ----------------------------
 CREATE PROCEDURE sp_InsertDriver
     @TenantId INT, @DriverName NVARCHAR(255), @Street NVARCHAR(255), @City NVARCHAR(255), @State NVARCHAR(255), @PostalCode NVARCHAR(20), @Phone NVARCHAR(50), @Email NVARCHAR(255)
 AS
@@ -422,9 +452,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Customers
--- -------------------------------------------------
+-- ------------------------------
+-- 6. Customers Stored Procedure:
+-- ------------------------------
 CREATE PROCEDURE sp_InsertCustomer
     @TenantId INT, @CustomerName NVARCHAR(255), @Street NVARCHAR(255), @City NVARCHAR(255), @State NVARCHAR(255), @PostalCode NVARCHAR(20), @Phone NVARCHAR(50), @Email NVARCHAR(255)
 AS
@@ -471,9 +501,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Products
--- -------------------------------------------------
+-- -----------------------------
+-- 7. Products Stored Procedure:
+-- -----------------------------
 CREATE PROCEDURE sp_InsertProduct
     @TenantId INT, @ProductCode NVARCHAR(50), @ProductName NVARCHAR(255), @ProductDescription NVARCHAR(MAX) = NULL
 AS
@@ -513,9 +543,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Jobs
--- -------------------------------------------------
+-- -------------------------
+-- 8. Jobs Stored Procedure:
+-- -------------------------
 CREATE PROCEDURE sp_InsertJob
     @TenantId INT, @JobNo NVARCHAR(50), @SourceSiteId INT, @DestinationSiteId INT, @ProductId INT, @DriverId INT, @CustomerId INT
 AS
@@ -561,9 +591,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Transactions
--- -------------------------------------------------
+-- ---------------------------------
+-- 9. Transactions Stored Procedure:
+-- ---------------------------------
 CREATE PROCEDURE sp_InsertTransaction
     @JobId INT = NULL, @WeighbridgeId INT, @VehicleId INT, @DriverId INT, @RegistrationNumber NVARCHAR(50),
     @SitePrefix NVARCHAR(10), @WeighbridgePrefix NVARCHAR(10), @AutoIncrementNumber INT,
@@ -626,9 +656,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Roles
--- -------------------------------------------------
+-- ---------------------------
+-- 10. Roles Stored Procedure:
+-- ---------------------------
 CREATE PROCEDURE sp_InsertRole
     @RoleName NVARCHAR(255)
 AS
@@ -668,9 +698,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- Users
--- -------------------------------------------------
+-- ---------------------------
+-- 11. Users Stored Procedure:
+-- ---------------------------
 CREATE PROCEDURE sp_InsertUser
     @TenantId INT, @Email NVARCHAR(255), @PasswordHash NVARCHAR(255), @Salt NVARCHAR(255), @IsActive BIT = 1
 AS
@@ -714,9 +744,9 @@ BEGIN
 END;
 GO
 
--- -------------------------------------------------
--- UserRoles (linking table)
--- -------------------------------------------------
+-- -------------------------------
+-- 12. UserRoles Stored Procedure:
+-- -------------------------------
 CREATE PROCEDURE sp_AddUserRole
     @UserId INT, @RoleId INT
 AS
